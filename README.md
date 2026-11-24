@@ -137,8 +137,8 @@ no stored data changes, but until you unplug and replug the keyboard:
 
 - key presses are not reported at all;
 - `hhkb_write` is rejected with status `0x01`;
-- reads cannot be relied on: once, a read returned a value whose write had just
-  been rejected, and the board returned the old value after a replug;
+- reads cannot be relied on: after a rejected write the board reports the value
+  that was attempted, not the one stored (seen twice);
 - a second `hhkb_fwdump` gets no reply and wedges the vendor channel entirely,
   after which every request fails until the keyboard is replugged.
 

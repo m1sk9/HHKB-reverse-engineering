@@ -63,12 +63,15 @@ easiest way to end up one byte out.
 | Value | Meaning |
 |---|---|
 | `0x00` | success |
-| `0x01` | rejected — seen only on `WRITE_KEYMAP` after a `DUMP_FIRMWARE` |
+| `0x01` | rejected — seen on `WRITE_KEYMAP`, both after a `DUMP_FIRMWARE` and twice on a board that had not been dumped; the cause of the latter was not found |
 
-After a status `0x01`, do not trust a `GET_KEYMAP` as evidence of what is stored
-until the keyboard has been replugged: once, a read returned a value whose write
-had just been rejected. See [firmware.md](firmware.md) for the sequence and for
-what was not tried.
+A rejected write still shows up afterwards: `GET_KEYMAP` reports the value that
+was attempted, not the one that is stored. This was seen twice. After a rejected
+`0x68` the board reported `0x68` on the next read, and in the earlier case a
+rejected `0x30` was reported as `0x30` until a replug brought back the stored
+`0x68`. So after a status `0x01`, a read-back is not evidence of what is stored.
+It also means a write whose target equals the reported value looks like a no-op
+even though nothing was stored. See [firmware.md](firmware.md).
 
 ### Chunk markers
 

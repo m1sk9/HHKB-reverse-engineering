@@ -117,10 +117,10 @@ static int txn(IOHIDDeviceRef dev, const uint8_t *out, uint8_t cmd, const char *
     if (g_in[3] != 0) {
         printf("    status 0x%02X (rejected)\n", g_in[3]);
         if (g_in[3] == 0x01)
-            printf("    status 0x01 has only been seen after DUMP_FIRMWARE. Once, a\n"
-                   "    read in that state returned a value whose write had been\n"
-                   "    rejected, so do not treat a read-back as proof until the\n"
-                   "    keyboard has been unplugged and replugged.\n");
+            printf("    status 0x01: the board refused the write. This has followed\n"
+                   "    DUMP_FIRMWARE and, unexplained, happened without one. A rejected\n"
+                   "    write still shows up in later reads, so do not treat a\n"
+                   "    read-back as proof until the keyboard has been replugged.\n");
         return -1;
     }
     return 0;

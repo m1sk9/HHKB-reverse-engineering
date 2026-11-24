@@ -9,8 +9,8 @@ repository. What follows is a description of its structure.
 
 ## What the board does after a dump
 
-Everything in this section was observed with the tools in this repository, not
-with happy-hacking-gnu. I found no way out of this state other than unplugging
+Unless a paragraph says otherwise, this section was observed with the tools in
+this repository rather than with happy-hacking-gnu. I found no way out of this state other than unplugging
 and replugging the keyboard; that is a statement about what I tried, not proof
 that none exists (see "Not tried" below). Until the replug:
 
@@ -26,18 +26,29 @@ that none exists (see "Not tried" below). Until the replug:
 Nothing is written and nothing stored changes — firmware versions and keymaps
 all survive intact. Only key scanning stops.
 
-What was seen once, in this order: a key held at `0x68`; a `WRITE_KEYMAP` of
-`0x30` to it, which was rejected; a `GET_KEYMAP` afterwards that returned
-`0x30`; then, after a replug, a `GET_KEYMAP` that returned `0x68`. So a read
-taken in this state did not reflect what the board stored. I did not capture the
-individual chunk responses of that first write, and I have not reproduced it, so
-the mechanism is unknown. Until the board has been replugged, do not take a read
-as evidence of what was written.
+Status `0x01` is not specific to a dump. It was also seen twice on a board that
+had not been dumped, once as the first write after the board had sat connected for
+a while and once about two minutes after a replug. Neither could be reproduced
+afterwards: writes that change a key were accepted on a fresh board, after 100
+seconds of silence, and after 40 runs of `hhg -m`. The trigger is unknown.
 
-**Not tried:** sending `NOTIFY_APPLICATION_STATE` with the close state after the
-dump, or any other command, to leave the state. happy-hacking-gnu brackets a
-remap and a firmware update with that command's open and close forms but not a
-dump, which makes it the first thing worth trying. It is a lead, not a finding.
+A rejected write still shows up in later reads: `GET_KEYMAP` reports the value
+that was attempted, not the one that is stored. In the earlier case, a rejected
+`0x30` was reported as `0x30` until a replug brought back the stored `0x68`; in
+the later one, a rejected `0x68` was reported as `0x68`. So a read taken after a
+`0x01` does not show what was stored.
+
+**Whether NOTIFY_APPLICATION_STATE recovers the state is untested.** The one
+attempt used a comparison that never actually tried to write (the target already
+equalled the reported value), so nothing can be concluded from it.
+
+**happy-hacking-gnu's own `--dump-firmware` did not finish on a healthy board.**
+Twice, `hhg --dump-firmware` produced no output and wrote no file for 150 seconds
+before being stopped, and every vendor request failed afterwards with
+`0xE00002D6` until a replug. In the second run two writes had been accepted
+twenty seconds earlier. The implementation here read the whole image in a couple
+of seconds on the same board, so the hang looks specific to how `hhg` reads the
+stream on macOS; why is not known.
 
 A second dump attempt is worse: `IOHIDDeviceSetReport` blocks with no timeout,
 and after killing the process the channel stays broken — every request fails
