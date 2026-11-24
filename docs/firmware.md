@@ -160,21 +160,23 @@ The consumer usage order for report 1 is readable regardless:
 | 6 | `0x00E9` | Volume Increment |
 | 7 | `0x00B8` | Eject |
 
-### Which consumer bits `0xE8`–`0xEB` reach
+### Which consumer bits `0xE8`–`0xEB` appear to reach
 
-| Code | Default position | Function | Consumer bit |
+| Code | Default position | Function (observed) | Consumer bit (inferred) |
 |---|---|---|---|
 | `0xE8` | Mac Fn+A | Volume Down | 5 |
 | `0xE9` | Mac Fn+S | Volume Up | 6 |
 | `0xEA` | Mac Fn+D | Mute | 4 |
 | `0xEB` | Mac Fn+F | Eject | 7 |
 
-**Not arithmetic.** Treating `code - 0xE8` as the bit index gives the wrong
-answer; the real order is 5, 6, 4, 7, so the firmware must hold an explicit
-table. The codes do run in physical key order across A, S, D and F.
+**Not arithmetic.** Treating `code - 0xE8` as the bit index would make `0xE8`
+Play/Pause, which is not what the key does. The functions are observed; the bit
+numbers are inferred from them and from the descriptor's usage order, giving 5,
+6, 4, 7, so there must be a mapping step. The codes do run in physical key order
+across A, S, D and F.
 
-Eject does nothing on a Mac with no optical drive, which is what "Fn+F appears
-dead" means — and is what pinned bit 7 down.
+Fn+F showed no visible effect. The manual lists Eject there and the machine has
+no optical drive, which is consistent with bit 7 being Eject.
 
 **No transport controls are reachable from the default keymap.** Nothing maps to
 consumer bits 0 through 3 in any mode or layer. HHK mode does carry `0x78`, the

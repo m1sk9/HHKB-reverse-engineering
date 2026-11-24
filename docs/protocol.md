@@ -92,7 +92,7 @@ redundancy is presumably a consistency check.
 | `0x03` | `RESET_FACTORY_DEFAULTS` | yes | restores every mode and both layers |
 | `0x04` | `CONFIRM_KEYMAP` | yes | commits a keymap write |
 | `0x05` | `GET_DIP_STATE` | yes | six DIP switch states |
-| `0x06` | `GET_KEYBOARD_MODE` | yes | 0 HHK, 1 Mac, 2 Win |
+| `0x06` | `GET_KEYBOARD_MODE` | yes | 1 (Mac) observed; 0 for HHK and 2 for Win are inferred |
 | `0x07` | `RESET_DIPSW` | | happy-hacking-gnu calls this after a remap; not needed here |
 | `0x86` | `WRITE_KEYMAP` | yes | three chunks, then `CONFIRM_KEYMAP` |
 | `0x87` | `GET_KEYMAP` | yes | three chunks; the mode parameter is honoured |
@@ -210,9 +210,10 @@ Values are USB HID keyboard usages, with these exceptions:
 | `0xEB` | Eject. Mac mode only |
 
 `0xE8`–`0xEB` are reserved in the HID keyboard page; the firmware converts them
-into consumer usages on interface 1. The mapping is a lookup table rather than
-arithmetic — they land on consumer bits 5, 6, 4 and 7. Assigning them elsewhere
-is not obviously safe.
+into consumer usages on interface 1. From the behaviour and the usage order in
+the firmware's consumer descriptor they appear to land on consumer bits 5, 6, 4
+and 7 — inferred, not seen on the wire. That is not `code - 0xE8`, so some
+mapping step must exist. Assigning them elsewhere is not obviously safe.
 
 HHK mode puts Henkan and Muhenkan on the diamond keys, which are the Japanese
 input toggles. Mac and Win modes put the GUI modifiers there instead.

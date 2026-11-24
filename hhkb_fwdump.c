@@ -30,7 +30,7 @@
 
 // A complete dump takes a couple of seconds. The per-read timeouts do not
 // cover IOHIDDeviceSetReport, which blocks with no timeout of its own when the
-// board is already in the read-only state, so bound the whole run instead.
+// board is already in the post-dump state, so bound the whole run instead.
 #define WATCHDOG_SECONDS 60
 
 static uint8_t g_in[REPORT_SIZE];
@@ -101,7 +101,7 @@ static void build(uint8_t *buf, uint8_t cmd) {
 static void on_watchdog(int sig) {
     (void)sig;
     static const char msg[] = "\nwatchdog: no progress. The board is most likely already in the\n"
-                              "read-only state DUMP_FIRMWARE leaves behind. Unplug and replug the\n"
+                              "post-dump state DUMP_FIRMWARE leaves behind. Unplug and replug the\n"
                               "keyboard before trying again.\n";
     write(STDERR_FILENO, msg, sizeof(msg) - 1);
     _exit(3);

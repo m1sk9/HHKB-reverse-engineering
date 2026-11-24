@@ -20,7 +20,7 @@ a protocol description nobody has executed is a guess.
 - [docs/keymaps.md](docs/keymaps.md) — the factory keymaps for all three modes
   and both layers, byte for byte, and what separates the modes
 - [docs/firmware.md](docs/firmware.md) — what `DUMP_FIRMWARE` returns, the MCU it
-  points at, the tables inside the image, and the read-only state it leaves the
+  points at, the tables inside the image, and the state it leaves the
   board in
 
 Everything in there was measured against a `PD-KB401B` (HHKB Professional
@@ -185,7 +185,7 @@ clangd --check=hhkb_probe.c
 ## Known issues
 
 `IOHIDDeviceSetReport` blocks with no timeout of its own when the board is in
-the read-only state, which no per-read timeout can cover. `hhkb_fwdump` and
+the post-dump state, which no per-read timeout can cover. `hhkb_fwdump` and
 `hhkb_reset` therefore bound the whole run with a 60 second watchdog and exit
 with status 3 rather than hanging; replug the keyboard when that fires. Moving
 to `IOHIDDeviceSetReportWithCallback` would address the cause rather than the
