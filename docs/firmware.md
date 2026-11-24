@@ -7,29 +7,37 @@ can be read out of it.
 keyboard; the result is PFU's copyrighted work and is excluded from this
 repository. What follows is a description of its structure.
 
-## It leaves the board read-only
+## What the board does after a dump
 
-`DUMP_FIRMWARE` is a one-way transition. Until the keyboard is unplugged and
-replugged:
+Everything in this section was observed with the tools in this repository, not
+with happy-hacking-gnu. I found no way out of this state other than unplugging
+and replugging the keyboard; that is a statement about what I tried, not proof
+that none exists (see "Not tried" below). Until the replug:
 
 | | |
 |---|---|
 | USB enumeration | all three interfaces stay up |
 | key presses | **not reported at all** |
 | `GET_KEYBOARD_INFO` and friends | still answer |
-| `GET_KEYMAP` | answers, but **the values cannot be trusted** |
+| `GET_KEYMAP` | answers, but see below |
 | `WRITE_KEYMAP` | rejected with status `0x01` |
 | a second `DUMP_FIRMWARE` | no reply, and the vendor channel wedges |
 
 Nothing is written and nothing stored changes — firmware versions and keymaps
 all survive intact. Only key scanning stops.
 
-The unreliable reads are the part that bites. After a rejected write, a
-`GET_KEYMAP` returned a value that had never been written; a restore that
-verified itself against that read reported success while the board had in fact
-kept the experimental value, which only surfaced after replugging. **Treat
-everything you read after a status `0x01` as meaningless until the board has
-been replugged.**
+What was seen once, in this order: a key held at `0x68`; a `WRITE_KEYMAP` of
+`0x30` to it, which was rejected; a `GET_KEYMAP` afterwards that returned
+`0x30`; then, after a replug, a `GET_KEYMAP` that returned `0x68`. So a read
+taken in this state did not reflect what the board stored. I did not capture the
+individual chunk responses of that first write, and I have not reproduced it, so
+the mechanism is unknown. Until the board has been replugged, do not take a read
+as evidence of what was written.
+
+**Not tried:** sending `NOTIFY_APPLICATION_STATE` with the close state after the
+dump, or any other command, to leave the state. happy-hacking-gnu brackets a
+remap and a firmware update with that command's open and close forms but not a
+dump, which makes it the first thing worth trying. It is a lead, not a finding.
 
 A second dump attempt is worse: `IOHIDDeviceSetReport` blocks with no timeout,
 and after killing the process the channel stays broken — every request fails
@@ -103,8 +111,10 @@ Mac 1, Win 2. Do not treat the table index as a mode ID.
 
 The last 16 bytes of each 144-byte slot are zero.
 
-**There is no seventh slot**, which is why `GET_KEYMAP` with mode 3 times out:
-there is no fourth table to return, and the manual documents only three settings.
+**There is no seventh slot.** That fits `GET_KEYMAP` with mode 3 timing out —
+there is no fourth table to return — but it is an explanation, not something
+observed to cause it. The Classic manual defines three modes and strikes through
+the SW1+SW2 ON/ON cell.
 
 A similar structure near `0xCD5C` appears to be the JIS variant, with its 69-key
 layout. Not analysed.

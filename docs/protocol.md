@@ -63,11 +63,12 @@ easiest way to end up one byte out.
 | Value | Meaning |
 |---|---|
 | `0x00` | success |
-| `0x01` | rejected — the board is in the read-only state that `DUMP_FIRMWARE` leaves behind |
+| `0x01` | rejected — seen only on `WRITE_KEYMAP` after a `DUMP_FIRMWARE` |
 
-Status `0x01` is not just a failed write. Reads in that state can return values
-that were never written, so nothing you read after seeing it means anything
-until the keyboard has been replugged. See [firmware.md](firmware.md).
+After a status `0x01`, do not trust a `GET_KEYMAP` as evidence of what is stored
+until the keyboard has been replugged: once, a read returned a value whose write
+had just been rejected. See [firmware.md](firmware.md) for the sequence and for
+what was not tried.
 
 ### Chunk markers
 
@@ -95,7 +96,7 @@ redundancy is presumably a consistency check.
 | `0x07` | `RESET_DIPSW` | | happy-hacking-gnu calls this after a remap; not needed here |
 | `0x86` | `WRITE_KEYMAP` | yes | three chunks, then `CONFIRM_KEYMAP` |
 | `0x87` | `GET_KEYMAP` | yes | three chunks; the mode parameter is honoured |
-| `0xD0` | `DUMP_FIRMWARE` | yes | returns 64 KiB, and leaves the board read-only |
+| `0xD0` | `DUMP_FIRMWARE` | yes | returns 64 KiB; afterwards writes are rejected until a replug |
 | `0xE0`–`0xE3` | `FIRMUP_*` | | updates the application bank |
 | `0xE4`–`0xE7` | `UPDATEBOOT_*` | | rewrites the backup bank. Do not |
 
@@ -125,28 +126,42 @@ Classic.
 
 ## Modes
 
-`GET_KEYBOARD_MODE` returns 0 for HHK, 1 for Mac and 2 for Win, selected by the
-first two DIP switches:
+The first two DIP switches select the mode, per the Classic manual:
 
 | SW1 | SW2 | Mode |
 |---|---|---|
 | off | off | HHK (factory setting) |
 | on | off | Win |
 | off | on | Mac |
+| on | on | none — the cell is struck through |
 
-There is no mode 3. The firmware holds three keymap tables, the manual documents
-three settings, and asking for a fourth times out with no reply at all.
+`GET_KEYBOARD_MODE` returns 0, 1 or 2. What was observed and what was inferred:
 
-happy-hacking-gnu calls mode 2 "Lite" and mode 3 "Secret". Neither name appears
-in the Professional Classic manual (`P3PC-6661-06`); mode 2 is Win, and mode 3
-does not exist on this model.
+- **Observed:** with the DIP switches at SW2 on (Mac), it returns 1.
+- **Observed:** `GET_KEYMAP` with mode 0, 1 and 2 returns three different tables,
+  and they match the manual's HHK, Mac and Win behaviour respectively — Henkan
+  and Muhenkan on the diamond keys for 0, the media keys for 1, GUI keys without
+  media keys for 2.
+- **Inferred:** that `GET_KEYBOARD_MODE` returns 0 for HHK and 2 for Win. I have
+  not switched the board into those modes while reading it.
+
+Mode 3 gets no reply from a Classic, and the firmware holds three keymap tables.
+That is all that was observed; it does not show that mode 3 cannot exist on
+other models.
+
+happy-hacking-gnu calls mode 2 "Lite" and mode 3 "Secret". PFU's manuals for the
+Classic (JA rev 06, EN rev 01) and the HYBRID (JA rev 03) all name the three
+settings HHK, Win and Mac, and none of them contains "Lite" or "Secret".
+happy-hacking-gnu has those strings from its first commit with no explanation, so
+where they come from is unknown.
 
 The mode also moves without touching the DIP switches: `Fn`+`Control`+`W` and
 `Fn`+`Control`+`M` select Win and Mac, though a board whose DIP switches say HHK
 returns to HHK. `GET_KEYBOARD_MODE` reports the effective mode.
 
-The remaining switches: SW3 chooses whether the Delete key sends Delete or
-Backspace and is ignored in Mac mode; SW4 turns the left diamond into Fn.
+The remaining switches, per the manual: SW3 chooses whether the Delete key sends
+Delete or Backspace and is ignored in Mac mode; SW4 turns the left diamond into
+Fn; SW5 swaps Alt and the diamond keys; SW6 selects power saving.
 
 ## Keymaps
 
@@ -217,7 +232,7 @@ binary with no third-party dependency.
 4. **No Input Monitoring permission is needed.** `ioreg` marks interfaces 0 and 1
    `RequiresTCCAuthorization`; interface 2 is not marked, and no prompt appears.
 5. `IOHIDDeviceSetReport` has no timeout of its own and blocks indefinitely once
-   the board is read-only. Bound the whole operation instead — the tools here use
+   the board is in the post-dump state. Bound the whole operation instead — the tools here use
    a 60 second watchdog.
 
 Porting from happy-hacking-gnu means shifting every buffer index by one: hidapi

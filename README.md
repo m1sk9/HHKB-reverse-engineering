@@ -27,8 +27,9 @@ Everything in there was measured against a `PD-KB401B` (HHKB Professional
 Classic, US layout) on firmware A4.29, under macOS 27.0 on an M2. Where
 something is inferred rather than observed, it says so.
 
-Two corrections to what was previously the only available account: the third
-keyboard mode is Win, not "Lite", and there is no fourth mode at all.
+One difference from the only earlier account: PFU's manuals name the three
+keyboard modes HHK, Win and Mac, while happy-hacking-gnu's names for modes 2 and
+3 — "Lite" and "Secret" — appear in none of them.
 
 ## Protocol in one screen
 
@@ -59,12 +60,14 @@ vendor one does not.
 | Read keymaps (all modes, both layers) | works |
 | Write keymaps | works, takes effect immediately |
 | Reset to factory defaults | works, covers all modes and layers |
-| Dump firmware | works, but leaves the board read-only until replug |
+| Dump firmware | works, but writes are rejected and key input stops until replug |
 | Flash firmware | not implemented |
 
-Keymap editing works on a Classic, which PFU's own tool refuses to do. That is a
-property of the tool rather than of the keyboard — the firmware answers the
-write commands the same as any other model.
+Keymap editing works on this Classic. PFU documents keymap customisation for the
+Type-S and HYBRID models only, and I have not run the official tool to see what
+it does with a Classic. What can be said is that the firmware accepted the
+write commands, and that the board is not one of the models PFU documents it
+for. Other models are untested.
 
 The tools are native arm64 and depend on nothing but macOS itself, so Rosetta is
 not involved. That is worth saying because the official Keymap Tool for Mac is an
@@ -129,21 +132,21 @@ Renders dumped keymaps as physical layouts and diffs them against HHK mode.
 
 ## Warnings
 
-**`hhkb_fwdump` puts the board into a read-only state.** Nothing is written and
+**`hhkb_fwdump` leaves the board unable to accept writes.** Nothing is written and
 no stored data changes, but until you unplug and replug the keyboard:
 
 - key presses are not reported at all;
 - `hhkb_write` is rejected with status `0x01`;
-- reads can return values that were never written, so a read-back proves
-  nothing;
+- reads cannot be relied on: once, a read returned a value whose write had just
+  been rejected, and the board returned the old value after a replug;
 - a second `hhkb_fwdump` gets no reply and wedges the vendor channel entirely,
   after which every request fails until the keyboard is replugged.
 
 Have another input device available before running it, and treat anything you
 read after a status `0x01` as unreliable until the board has been replugged.
 
-**Keymap editing is not a supported use of Classic models.** PFU's tool does not
-offer it. This may matter for warranty purposes. Dump your keymaps first — a
+**Keymap editing is not a documented use of the Classic.** PFU's manual describes
+it for the Type-S only. This may matter for warranty purposes. Dump your keymaps first — a
 factory reset path exists, but your own dump is the reliable way back.
 
 **Do not touch the `UPDATEBOOT_*` commands** (`0xE4`–`0xE7`). They rewrite the
@@ -202,10 +205,10 @@ only deprecation warnings. Its README documents Linux alone, and it accepts the
 Classic's product ID without saying it was ever tested against one.
 
 This project reimplements the protocol directly on IOKit with no third-party
-dependency, and reports what a Classic actually does — including that mode 2 is
-Win rather than "Lite", that mode 3 does not exist, what `0xE8`–`0xEB` really
-send, and that dumping firmware leaves the board read-only until it is
-replugged, which nothing else documents.
+dependency, and records what a Classic does: the mode names PFU's manuals use,
+what `0xE8`–`0xEB` send, and what a firmware dump does to the board afterwards.
+The last of those I have only seen with the tools here, not with
+happy-hacking-gnu.
 
 ## License
 

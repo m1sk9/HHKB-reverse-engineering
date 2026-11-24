@@ -16,13 +16,17 @@ The three modes share almost everything. Taking HHK as the baseline:
 
 - **Mac and Win** replace Henkan and Muhenkan on the diamond keys with the GUI
   modifiers.
-- **Mac** alone has the media keys, Power on Fn+Esc, and Backspace rather than
-  Delete on the top right key.
+- **Mac** alone has the media keys (Fn+A/S/D/F), Power on Fn+Esc, Clear on
+  Fn+Delete, and Backspace rather than Delete on the top right key.
 - **Mac and Win** both have Caps Lock on Fn+Tab and the keypad codes on the Fn
   layer; HHK has neither.
+- **HHK** alone has Stop on the right diamond in the Fn layer, and keeps
+  Backspace on Fn+Delete along with Win.
 
-Media keys, Power and Caps Lock being Mac-only matches the Fn key table in the
-manual, which marks them supported in the Mac column only.
+These agree with the Fn key table on pages 5 and 6 of the Classic manual
+(`P3PC-6661-06`), which gives each function's support in the HHK, Win and Mac
+columns. The manual footnotes Caps Lock on Win with "some drivers or operating
+systems need Shift held as well".
 
 ## mode 0 — HHK
 
@@ -159,7 +163,7 @@ Key numbers, against mode 0.
 | 28 | `07` D | `EA` Mute |
 | 29 | `16` S | `E9` Volume Up |
 | 30 | `04` A | `E8` Volume Down |
-| 32 | `2A` Backspace | `53` Num Lock |
+| 32 | `2A` Backspace | `53` keypad Num Lock / Clear (the manual calls it Clear) |
 | 45 | `2B` Tab | `39` Caps Lock |
 | 60 | `29` Esc | `66` Power |
 
@@ -172,7 +176,7 @@ Key numbers, against mode 0.
 
 ### Win, Fn — 8 bytes
 
-The Mac Fn differences minus the media keys (27–30), Num Lock (32) and Power
+The Mac Fn differences minus the media keys (27–30), Clear (32) and Power
 (60). The keypad codes and Caps Lock are present in Win too.
 
 ## Where an Fn layer shows a plain letter
